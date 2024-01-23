@@ -17,6 +17,7 @@
 ## ---------------------------
 
 library(dplyr)
+library(ggplot2)
 
 # ex 4.a -------
 ## I run 819 simulations using a binomial distribution
@@ -39,6 +40,7 @@ d_beta_hat <- list()
 for(i in 1:length(N)){
     d <- c()
     for(j in 1: 100){
+        set.seed(3141)
         n_female_p_class <- rbinom(N[i], size = k, prob = p) # generate a list of values for each possible scenario of N
         fract_fem_p_class <- n_female_p_class/k
         epsilon <- rnorm(N[i])  # generate a list of values for epsilon
@@ -50,6 +52,15 @@ for(i in 1:length(N)){
     }
     d_beta_hat[[i]] <- data.frame(beta_hat = d, size = rep(N[i], nrow(d)), row.names = NULL)
 }
+
+# calculate standard deviations
+sigma_beta <- do.call(rbind, lapply(d_beta_hat, function(x) sd(x[[1]])))
+d_plot_4b1 <- data_frame(sigma_beta = sigma_beta, size = N)
+
+p <- ggplot(d_plot_4b1, aes(x = N, y = sigma_beta)) +
+    geom_point() +
+    labs(title = "Line Plot of x vs y", x = "X Variable", y = "Y Variable")
+p
 
 
 
