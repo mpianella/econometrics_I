@@ -65,10 +65,10 @@ set.seed(3141)
 sigma_beta <- get_sd(N = N ,p=p,k=k,beta=beta,n_sim=n_sim)
 d_plot_4b1 <- data_frame(sigma_beta = unlist(sigma_beta), size = N)
 
-p <- ggplot(d_plot_4b1, aes(x = N, y = sigma_beta)) +
+p4b1 <- ggplot(d_plot_4b1, aes(x = N, y = sigma_beta)) +
     geom_point() +
     labs(title = "Number of classes and standard deviation of beta coefficient", x = "N", y = "Sigma beta")
-p
+p4b1
 
 # ex 4.b.2 ----
 # set up coefficients again
@@ -90,10 +90,10 @@ for(w in 1:length(k)){
 d <- data_frame(d_plot_4b1, class_size = 40)
 data_plot_4b2 <- rbind(d, data)
 
-p2 <- ggplot(data_plot_4b2, aes(x = size, y = sigma_beta, color = class_size)) +
+p4b2 <- ggplot(data_plot_4b2, aes(x = size, y = sigma_beta, color = class_size)) +
     geom_point() +
     theme_minimal() +
     labs(title = "Number of classes and standard deviation of beta coefficient", x = "N", y = "Sigma beta")
-p2
+p4b2
 
 
