@@ -18,6 +18,7 @@
 
 library(dplyr)
 library(ggplot2)
+library(scales)
 
 
 
@@ -167,3 +168,31 @@ p4b4_1 <- ggplot(d_plot_4b4, aes(x = factor(N), y = sigma_beta, fill = factor(fu
     scale_fill_manual(values = c("#1f77b4", "#ff7f0e", "#9467bd")) +  
     labs(title = "Number of classes and standard deviation of beta coefficient", x = "N", y = "Sigma beta")
 p4b4_1
+
+# ex.4.c ----
+N <- c(10, 20, 60)
+p <- 1/2
+data_4c <- data_frame()
+for (i in 1:length(N)) {
+    perc_25 <- floor((N[i] -1 )* 0.25)
+    perc_75 <- ceiling((N[i] - 1) * 0.75) + 1
+    perc_less_25_higher_75 <- sum(dbinom(c(0:perc_25, perc_75:N[i]), N[i], p))
+    d <- data_frame(perc_less_25_higher_75 = perc_less_25_higher_75, size_class = N[i])
+    data_4c <- rbind(data_4c, d) 
+}
+data_4c
+p4c <- ggplot(data_4c, aes(x = factor(size_class), y = perc_less_25_higher_75, fill = factor(size_class)), log10 = "y") +
+    geom_bar(stat = "identity", position = "dodge") +
+    geom_text(aes(label = round(perc_less_25_higher_75, 6)), 
+              position = position_dodge(width = 0.9),    # Adjust position to align with bars
+              vjust = -0.2,   # Adjust vertical position to be just above the bars
+              size = 6) +
+    scale_fill_manual(values = c("#008080", "#FF7F50", "#FFC300")) +  
+    coord_trans(y= "sqrt")+  # Log scale for y-axis with original values as labels
+    labs(title = "% of students with <25% or >75% female teachers by number of attended classes", 
+         x = "Class size", y = "% of students with >25% or <75% female teachers",
+         fill = "Class size") +
+    theme_bw()  
+p4c
+
+
