@@ -64,7 +64,9 @@ d_plot_4b1 <- data_frame(sigma_beta = unlist(sigma_beta), size = N)
 
 p4b1 <- ggplot(d_plot_4b1, aes(x = N, y = sigma_beta)) +
     geom_point() +
-    labs(title = "Number of classes and standard deviation of beta coefficient", x = "N", y = "Sigma beta")
+    geom_line() +
+    labs(title = "Standard deviation of beta coefficient by number of classes", x = "N", y = "Sigma beta") +
+    theme_bw()
 p4b1
 
 # ex 4.b.2 ----
@@ -89,7 +91,7 @@ p4b2 <- ggplot(data_plot_4b2, aes(x = size, y = sigma_beta, color = factor(class
     geom_line() +
     theme_minimal() +
     scale_color_manual(values = c("#1f77b4", "#ff7f0e", "#2ca02c", "#9467bd")) +  
-    labs(title = "Number of classes and standard deviation of beta coefficient", x = "N", y = "Sigma beta")
+    labs(title = "Standard deviation of beta coefficient by number of classes", x = "N", y = "Sigma beta")
 p4b2
 
 
@@ -166,7 +168,7 @@ p4b4_1 <- ggplot(d_plot_4b4, aes(x = factor(N), y = sigma_beta, fill = factor(fu
     geom_bar(stat = "identity", position = "dodge") +
     theme_minimal() +
     scale_fill_manual(values = c("#1f77b4", "#ff7f0e", "#9467bd")) +  
-    labs(title = "Number of classes and standard deviation of beta coefficient", x = "N", y = "Sigma beta")
+    labs(title = "Standard deviation of the beta coefficient by possible funding scenario", x = "N", y = "Sigma beta")
 p4b4_1
 
 # ex.4.c ----
@@ -190,8 +192,8 @@ p4c <- ggplot(data_4c, aes(x = factor(size_class), y = perc_less_25_higher_75, f
     scale_fill_manual(values = c("#008080", "#FF7F50", "#FFC300")) +  
     coord_trans(y= "sqrt")+  # Log scale for y-axis with original values as labels
     labs(title = "% of students with <25% or >75% female teachers by number of attended classes", 
-         x = "Class size", y = "% of students with >25% or <75% female teachers",
-         fill = "Class size") +
+         x = "Number of attended classes", y = "% of students with >25% or <75% female teachers",
+         fill = "Class of attended classes") +
     theme_bw()  
 p4c
 
