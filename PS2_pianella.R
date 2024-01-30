@@ -15,6 +15,8 @@
 ##
 ## ---------------------------
 
+library(dplyr)
+
 # ex.3.e --------
 # define functions and arguments
 
@@ -42,17 +44,17 @@ comp_cdf_expon_2 <- function(obs, x_tilde){
 
 #' Compute the cumulative density using a normal cdf and mean and variance 
 #' are the MLE estimate in the normal case. 
-#' @param {n} {number of observations}
-comp_cdf_normal <- function(obs, n, x_tilde){
+#' @param {n_obs} {number of observations}
+comp_cdf_normal <- function(obs, n_obs, x_tilde){
     mu_MLE <- mean(obs, na.rm = TRUE)
-    sd_obs_MLE <- 1/n * sum((obs - x_tilde)^2)
+    sd_obs_MLE <- 1/n_obs * sum((obs - x_tilde)^2)
     value_cdf <- pnorm(x_tilde, mean = mu_MLE, sd = sd_obs_MLE)
     return(value_cdf)
 }
 
 # sample n observations from the exponential distribution with lambda = 1
 lambda <- 1
-n <- c(50, 100, 250, 1000)
+n_obs <- c(50, 100, 250, 1000)
 obs <- list()
 obs <- lapply(n, function(x) rexp(x, rate = lambda))
 
@@ -68,7 +70,7 @@ for (i in 1:length(x_tilde)){
     data <- data.frame()
     for (j in 1:n_iter) {
         n_vec <- sapply(obs, length)
-        y <- sapply(obs, function(x) comp_cdf_normal(obs = x, n = length(obs), x_tilde = x_t))
+        y <- sapply(obs, function(x) comp_cdf_normal(obs = x, n_obs = length(obs), x_tilde = x_t))
         d <- cbind(y, n_vec)
         data <- rbind(data, d)
     }
@@ -89,7 +91,7 @@ for (i in 1:length(x_tilde)){
         data <- rbind(data, d)
     }
     data$x_tilde <- x_tilde[i]
-    data_expon_1 <- rbind(data_normal, data)
+    data_expon_1 <- rbind(data_expon_1, data)
 }
 
 # generate data for the case of the second exponential distribition
@@ -100,14 +102,27 @@ for (i in 1:length(x_tilde)){
     data <- data.frame()
     for (j in 1:n_iter) {
         n_vec <- sapply(obs, length)
-        y <- sapply(obs, function(x) comp_cfd_expon_2(obs = x, x_tilde = x_t))
+        y <- sapply(obs, function(x) comp_cdf_expon_2(obs = x, x_tilde = x_t))
         d <- cbind(y, n_vec)
         data <- rbind(data, d)
     }
     data$x_tilde <- x_tilde[i]
-    data_expon_2 <- rbind(data_normal, data)
+    data_expon_2 <- rbind(data_expon_2, data)
 }
 
 # generate data for the true distribution 
 data_true <- data.frame(cdf_true = sapply(x_tilde, pexp), x_tilde = x_tilde)
+
+# data preprocessing for plot 
+data1 <- data.frame(data_expon_1, distrib = "exponential1")
+data2 <- data.frame(data_expon_2, distrib = "exponential2")
+data3 <- data.frame(data_normal, distrib = "normal")
+
+data_all <- rbind(data1, data2, data3) %>% 
+    left_join(data_true, by = "x_tilde") %>% 
+    rename(estim_cum_prob = y, n_obs = n_vec)
+    mutate(emp_avg_bias =  estim_cum_prob - cdf_true) %>% 
+    group_by(distrib, x_tilde, n_obs) %>% 
+    mutate(emp_avg_var = var(estim_cum_prob), MSE = emp_avg_bias^2 + emp_avg_var)
+    
 
