@@ -16,6 +16,7 @@
 ## ---------------------------
 
 library(dplyr)
+library(ggplot2)
 
 # ex.3.e --------
 # define functions and arguments
@@ -52,23 +53,22 @@ comp_cdf_normal <- function(obs, n_obs, x_tilde){
     return(value_cdf)
 }
 
-# sample n observations from the exponential distribution with lambda = 1
-lambda <- 1
-n_obs <- c(50, 100, 250, 1000)
-obs <- list()
-obs <- lapply(n, function(x) rexp(x, rate = lambda))
+
 
 # define remaining parameter for the functions
 x_tilde <- c(1/2, 1, 2, 3)
 n_iter <- 500
 
 # generate data for the case of the normal distribution 
-data_normal <- data.frame()
 set.seed(314)
+data_normal <- data.frame()
 for (i in 1:length(x_tilde)){
     x_t <- x_tilde[i]
     data <- data.frame()
     for (j in 1:n_iter) {
+        lambda <- 1 # sample n observations from the exponential distribution with lambda = 1
+        n_obs <- c(50, 100, 250, 1000)
+        obs <- lapply(n, function(x) rexp(x, rate = lambda))
         n_vec <- sapply(obs, length)
         y <- sapply(obs, function(x) comp_cdf_normal(obs = x, n_obs = length(obs), x_tilde = x_t))
         d <- cbind(y, n_vec)
@@ -79,12 +79,15 @@ for (i in 1:length(x_tilde)){
 }
 
 # generate data for the case of the first exponential distribution 
-data_expon_1 <- data.frame()
 set.seed(3141)
+data_expon_1 <- data.frame()
 for (i in 1:length(x_tilde)){
     x_t <- x_tilde[i]
     data <- data.frame()
     for (j in 1:n_iter) {
+        lambda <- 1 # sample n observations from the exponential distribution with lambda = 1
+        n_obs <- c(50, 100, 250, 1000)
+        obs <- lapply(n, function(x) rexp(x, rate = lambda))
         n_vec <- sapply(obs, length)
         y <- sapply(obs, function(x) comp_cfd_expon_1(obs = x, x_tilde = x_t))
         d <- cbind(y, n_vec)
@@ -95,12 +98,15 @@ for (i in 1:length(x_tilde)){
 }
 
 # generate data for the case of the second exponential distribition
-data_expon_2 <- data.frame()
 set.seed(31415)
+data_expon_2 <- data.frame()
 for (i in 1:length(x_tilde)){
     x_t <- x_tilde[i]
     data <- data.frame()
     for (j in 1:n_iter) {
+        lambda <- 1 # sample n observations from the exponential distribution with lambda = 1
+        n_obs <- c(50, 100, 250, 1000)
+        obs <- lapply(n, function(x) rexp(x, rate = lambda))
         n_vec <- sapply(obs, length)
         y <- sapply(obs, function(x) comp_cdf_expon_2(obs = x, x_tilde = x_t))
         d <- cbind(y, n_vec)
@@ -120,9 +126,14 @@ data3 <- data.frame(data_normal, distrib = "normal")
 
 data_all <- rbind(data1, data2, data3) %>% 
     left_join(data_true, by = "x_tilde") %>% 
-    rename(estim_cum_prob = y, n_obs = n_vec)
+    rename(estim_cum_prob = y, n_obs = n_vec) %>% 
     mutate(emp_avg_bias =  estim_cum_prob - cdf_true) %>% 
-    group_by(distrib, x_tilde, n_obs) %>% 
-    mutate(emp_avg_var = var(estim_cum_prob), MSE = emp_avg_bias^2 + emp_avg_var)
+    mutate(count = n(), emp_avg_var = var(estim_cum_prob), MSE = emp_avg_bias^2 + emp_avg_var)
     
+# plot of average bias
+plot_ex_3_e <- ggplot(data_all, aes(x = as.factor(n_obs), y = estim_cum_prob, color = as.factor(distrib))) +
+    geom_point() +
+    theme_bw()
+
+plot_ex_3_e
 
