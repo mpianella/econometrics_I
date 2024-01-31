@@ -62,8 +62,8 @@ x_tilde <- c(1/2, 1, 2, 3)
 n_iter <- 500
 
 # generate data for the case of the normal distribution 
-set.seed(314)
 data_normal <- data.frame()
+set.seed(314)
 for (i in 1:length(x_tilde)){
     x_t <- x_tilde[i]
     data <- data.frame()
@@ -81,8 +81,8 @@ for (i in 1:length(x_tilde)){
 }
 
 # generate data for the case of the first exponential distribution 
-set.seed(3141)
 data_expon_1 <- data.frame()
+set.seed(3141)
 for (i in 1:length(x_tilde)){
     x_t <- x_tilde[i]
     data <- data.frame()
@@ -100,8 +100,8 @@ for (i in 1:length(x_tilde)){
 }
 
 # generate data for the case of the second exponential distribition
-set.seed(31415)
 data_expon_2 <- data.frame()
+set.seed(31415)
 for (i in 1:length(x_tilde)){
     x_t <- x_tilde[i]
     data <- data.frame()
@@ -128,17 +128,31 @@ data3 <- data.frame(data_normal, distrib = "normal")
 
 data_all <- rbind(data1, data2, data3) %>% 
     left_join(data_true, by = "x_tilde") %>% 
-    rename(estim_cum_prob = y, n_obs = n_vec) %>% 
-    mutate(emp_avg_bias =  estim_cum_prob - cdf_true) %>% 
-    mutate(count = n(), emp_avg_var = var(estim_cum_prob), MSE = emp_avg_bias^2 + emp_avg_var)
+    rename(estim_cum_prob = y, n_obs = n_vec) 
+
+data_plot_ex_3 <- data_all %>% 
+    group_by(distrib, x_tilde, n_obs) %>% 
+    dplyr::summarise(emp_avg_bias =  mean(estim_cum_prob - cdf_true), emp_avg_var = var(estim_cum_prob), 
+              MSE = emp_avg_bias^2 + emp_avg_var) 
     
 # plot of average bias
-plot_ex_3_e <- ggplot(data_all, aes(x = as.factor(n_obs), y = estim_cum_prob, color = as.factor(distrib))) +
+plot_ex_3_e1 <- ggplot(data_plot_ex_3, aes(x = as.factor(n_obs), y = emp_avg_bias, color = as.factor(distrib))) +
     geom_point() +
-    theme_bw()
+    theme_bw() + 
+    facet_wrap(~ x_tilde)
+plot_ex_3_e1
 
-plot_ex_3_e
+plot_ex_3_e2 <- ggplot(data_plot_ex_3, aes(x = as.factor(n_obs), y = emp_avg_var, color = as.factor(distrib))) +
+    geom_point() +
+    theme_bw() + 
+    facet_wrap(~ x_tilde)
+plot_ex_3_e2
 
+plot_ex_3_e3 <- ggplot(data_plot_ex_3, aes(x = as.factor(n_obs), y = MSE, color = as.factor(distrib))) +
+    geom_point() +
+    theme_bw() + 
+    facet_wrap(~ x_tilde)
+plot_ex_3_e3
 
 #ex.4.e ---------
 ## please set your working directory to the econometrics_I folder
