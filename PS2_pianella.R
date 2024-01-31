@@ -17,6 +17,8 @@
 
 library(dplyr)
 library(ggplot2)
+library(gmm)
+library(stats)
 
 # ex.3.e --------
 # define functions and arguments
@@ -68,7 +70,7 @@ for (i in 1:length(x_tilde)){
     for (j in 1:n_iter) {
         lambda <- 1 # sample n observations from the exponential distribution with lambda = 1
         n_obs <- c(50, 100, 250, 1000)
-        obs <- lapply(n, function(x) rexp(x, rate = lambda))
+        obs <- lapply(n_obs, function(x) rexp(x, rate = lambda))
         n_vec <- sapply(obs, length)
         y <- sapply(obs, function(x) comp_cdf_normal(obs = x, n_obs = length(obs), x_tilde = x_t))
         d <- cbind(y, n_vec)
@@ -87,7 +89,7 @@ for (i in 1:length(x_tilde)){
     for (j in 1:n_iter) {
         lambda <- 1 # sample n observations from the exponential distribution with lambda = 1
         n_obs <- c(50, 100, 250, 1000)
-        obs <- lapply(n, function(x) rexp(x, rate = lambda))
+        obs <- lapply(n_obs, function(x) rexp(x, rate = lambda))
         n_vec <- sapply(obs, length)
         y <- sapply(obs, function(x) comp_cfd_expon_1(obs = x, x_tilde = x_t))
         d <- cbind(y, n_vec)
@@ -106,7 +108,7 @@ for (i in 1:length(x_tilde)){
     for (j in 1:n_iter) {
         lambda <- 1 # sample n observations from the exponential distribution with lambda = 1
         n_obs <- c(50, 100, 250, 1000)
-        obs <- lapply(n, function(x) rexp(x, rate = lambda))
+        obs <- lapply(n_obs, function(x) rexp(x, rate = lambda))
         n_vec <- sapply(obs, length)
         y <- sapply(obs, function(x) comp_cdf_expon_2(obs = x, x_tilde = x_t))
         d <- cbind(y, n_vec)
@@ -136,4 +138,52 @@ plot_ex_3_e <- ggplot(data_all, aes(x = as.factor(n_obs), y = estim_cum_prob, co
     theme_bw()
 
 plot_ex_3_e
+
+
+#ex.4.e ---------
+## please set your working directory to the econometrics_I folder
+
+gmmdata <- read.csv(file.path("csv", "gmmdata.csv"))
+
+# prepare data for the analysis
+data_ex4 <- gmmdata %>% 
+    mutate(r_bar = mean(r), r_lead1 = dplyr::lead(r), c_lead1 = dplyr::lead(c))
+
+#' Write the g function to be used for computation
+#'
+#'@param {beta} {description}
+#'@param {gamma} {description}
+#'@param {x} {data}
+#'
+#'@returns {it returns a t-1 x 2 matrix}
+g <- function(tet, x){
+    beta <- tet[1]
+    gamma <- tet[2]
+    c <- x$c
+    r <- x$r
+    c_lead1 <- x$c_lead1 
+    r_lead1 <- x$r_lead1
+    r_bar  <- x$r_bar
+    g_b <- c^(gamma) - (beta * r_lead1 * (c_lead1 ^ (gamma - 1)))[-length(c)] # dropping the last because NA
+    g_c <- c^(gamma-1) * (r_lead1 - r_bar)[-length(c)] #dropping last becasue NA
+    f <- cbind(g_b, g_c)
+    return(f)
+}
+
+#' Writing the Jacobian of g
+Dg <- function(tet, x){
+    beta <- tet[1]
+    gamma <- tet[2]
+    c <- x$c
+    r <- x$r
+    c_lead1 <- x$c_lead1 
+    r_lead1 <- x$r_lead1
+    r_bar  <- x$r_bar
+    jacobian <- matrix(c(mean(- r_lead1 * (c_lead1 ^(gamma -1)), na.rm = TRUE), 0, 
+                         mean(c^(gamma) * log(c) - (beta * r_lead1 * c_lead1^(gamma-1)) * log(c_lead1), na.rm = TRUE),
+                         mean(c^(gamma-1) *(r_lead1 - r_bar) *log(c))))
+    return(jacobian)
+}
+
+gmm(g = g, gradv = Dg, x = data_ex4, t0 = c(0,0))
 
