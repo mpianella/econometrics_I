@@ -159,13 +159,13 @@ data_ex4 <- gmmdata %>%
 g <- function(tet, x){
     beta <- tet[1]
     gamma <- tet[2]
-    c <- x$c
+    c <- x$c 
     r <- x$r
     c_lead1 <- x$c_lead1 
     r_lead1 <- x$r_lead1
     r_bar  <- x$r_bar
-    g_b <- c^(gamma) - (beta * r_lead1 * (c_lead1 ^ (gamma - 1)))[-length(c)] # dropping the last because NA
-    g_c <- c^(gamma-1) * (r_lead1 - r_bar)[-length(c)] #dropping last becasue NA
+    g_b <- c(c^(gamma) - (beta * r_lead1 * (c_lead1 ^ (gamma - 1))))[-length(c)] # dropping the last observation because NA
+    g_c <- c(c^(gamma-1) * (r_lead1 - r_bar))[-length(c)] # dropping last because NA
     f <- cbind(g_b, g_c)
     return(f)
 }
@@ -174,16 +174,16 @@ g <- function(tet, x){
 Dg <- function(tet, x){
     beta <- tet[1]
     gamma <- tet[2]
-    c <- x$c
-    r <- x$r
-    c_lead1 <- x$c_lead1 
-    r_lead1 <- x$r_lead1
-    r_bar  <- x$r_bar
+    c <- head(x$c, -1)
+    r <- head(x$r[-1], -1)
+    c_lead1 <- head(x$c_lead1, -1) 
+    r_lead1 <- head(x$r_lead1, -1)
+    r_bar  <- head(x$r_bar, -1)
     jacobian <- matrix(c(mean(- r_lead1 * (c_lead1 ^(gamma -1)), na.rm = TRUE), 0, 
                          mean(c^(gamma) * log(c) - (beta * r_lead1 * c_lead1^(gamma-1)) * log(c_lead1), na.rm = TRUE),
-                         mean(c^(gamma-1) *(r_lead1 - r_bar) *log(c))))
+                         mean(c^(gamma-1) *(r_lead1 - r_bar) *log(c), na.rm = TRUE)), nrow = 2, ncol =2)
     return(jacobian)
 }
 
-gmm(g = g, gradv = Dg, x = data_ex4, t0 = c(0,0))
+gmm(g = g, gradv = Dg, x = data_ex4, t0 = c(-1,-1))
 
