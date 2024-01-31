@@ -20,6 +20,8 @@ library(ggplot2)
 library(gmm)
 library(stats)
 
+# please set your directory to the folder econometrics_I
+
 # ex.3.e --------
 # define functions and arguments
 
@@ -50,12 +52,16 @@ comp_cdf_expon_2 <- function(obs, x_tilde){
 #' @param {n_obs} {number of observations}
 comp_cdf_normal <- function(obs, n_obs, x_tilde){
     mu_MLE <- mean(obs, na.rm = TRUE)
-    sd_obs_MLE <- 1/n_obs * sum((obs - x_tilde)^2)
+    sd_obs_MLE <- sqrt(1/n_obs * sum((obs - x_tilde)^2))
     value_cdf <- pnorm(x_tilde, mean = mu_MLE, sd = sd_obs_MLE)
     return(value_cdf)
 }
 
-
+#' Compute the cumulative density the share of the sample below x_tilde as estimator.
+comp_less_x_tilde <- function(obs, x_tilde){
+    value_cdf <- sum(obs < x_tilde)/length(obs)
+    return(value_cdf)
+}
 
 # define remaining parameter for the functions
 x_tilde <- c(1/2, 1, 2, 3)
@@ -118,6 +124,27 @@ for (i in 1:length(x_tilde)){
     data_expon_2 <- rbind(data_expon_2, data)
 }
 
+# generate data for the case of the less than x_tilde estimator
+data_less_x_tilde <- data.frame()
+set.seed(314159)
+for (i in 1:length(x_tilde)){
+    x_t <- x_tilde[i]
+    data <- data.frame()
+    for (j in 1:n_iter) {
+        lambda <- 1 # sample n observations from the exponential distribution with lambda = 1
+        n_obs <- c(50, 100, 250, 1000)
+        obs <- lapply(n_obs, function(x) rexp(x, rate = lambda))
+        n_vec <- sapply(obs, length)
+        y <- sapply(obs, function(x) comp_cdf_less_x_tilde(obs = x, x_tilde = x_t))
+        d <- cbind(y, n_vec)
+        data <- rbind(data, d)
+    }
+    data$x_tilde <- x_tilde[i]
+    data_less_x_tilde <- rbind(data_less_x_tilde, data)
+}
+
+
+
 # generate data for the true distribution 
 data_true <- data.frame(cdf_true = sapply(x_tilde, pexp), x_tilde = x_tilde)
 
@@ -125,8 +152,9 @@ data_true <- data.frame(cdf_true = sapply(x_tilde, pexp), x_tilde = x_tilde)
 data1 <- data.frame(data_expon_1, distrib = "exponential1")
 data2 <- data.frame(data_expon_2, distrib = "exponential2")
 data3 <- data.frame(data_normal, distrib = "normal")
+data4 <- data.frame(data_less_x_tilde, distrib = "less_x_tilde")
 
-data_all <- rbind(data1, data2, data3) %>% 
+data_all <- rbind(data1, data2, data3, data4) %>% 
     left_join(data_true, by = "x_tilde") %>% 
     rename(estim_cum_prob = y, n_obs = n_vec) 
 
@@ -137,22 +165,36 @@ data_plot_ex_3 <- data_all %>%
     
 # plot of average bias
 plot_ex_3_e1 <- ggplot(data_plot_ex_3, aes(x = as.factor(n_obs), y = emp_avg_bias, color = as.factor(distrib))) +
-    geom_point() +
+    geom_point(size = 4) +
+    scale_color_viridis_d() +
     theme_bw() + 
+    labs(title = "Empirical average bias by x_tilde and by estimator", color = "Distribution", 
+         y = "Emp avg bias", x = "Number of observations") +
     facet_wrap(~ x_tilde)
 plot_ex_3_e1
+ggsave("./png/ex_3_e1.png")
+
 
 plot_ex_3_e2 <- ggplot(data_plot_ex_3, aes(x = as.factor(n_obs), y = emp_avg_var, color = as.factor(distrib))) +
-    geom_point() +
+    geom_point(size = 3) +
+    scale_color_viridis_d() +
+    labs(title = "Empirical average variance by x_tilde and by estimator", color = "Distribution", 
+         y = "Emp avg variance", x = "Number of observations") +
     theme_bw() + 
     facet_wrap(~ x_tilde)
 plot_ex_3_e2
+ggsave("./png/ex_3_e2.png")
+
 
 plot_ex_3_e3 <- ggplot(data_plot_ex_3, aes(x = as.factor(n_obs), y = MSE, color = as.factor(distrib))) +
-    geom_point() +
+    geom_point(size = 3) +
+    scale_color_viridis_d() + 
+    labs(title = "MSE by x_tilde and by estimator", color = "Distribution", 
+         y = "MSE", x = "Number of observations") +
     theme_bw() + 
     facet_wrap(~ x_tilde)
 plot_ex_3_e3
+ggsave("./png/ex_3_e3.png")
 
 #ex.4.e ---------
 ## please set your working directory to the econometrics_I folder
@@ -179,7 +221,7 @@ g <- function(tet, x){
     r_lead1 <- x$r_lead1
     r_bar  <- x$r_bar
     g_b <- c(c^(gamma) - (beta * r_lead1 * (c_lead1 ^ (gamma - 1))))[-length(c)] # dropping the last observation because NA
-    g_c <- c(c^(gamma-1) * (r_lead1 - r_bar))[-length(c)] # dropping last because NA
+    g_c <- c(c^(gamma-1) * (r_lead1 - r_bar) )[-length(c)] # dropping last because NA
     f <- cbind(g_b, g_c)
     return(f)
 }
@@ -189,7 +231,7 @@ Dg <- function(tet, x){
     beta <- tet[1]
     gamma <- tet[2]
     c <- head(x$c, -1)
-    r <- head(x$r[-1], -1)
+    r <- head(x$r, -1)
     c_lead1 <- head(x$c_lead1, -1) 
     r_lead1 <- head(x$r_lead1, -1)
     r_bar  <- head(x$r_bar, -1)
@@ -199,5 +241,5 @@ Dg <- function(tet, x){
     return(jacobian)
 }
 
-gmm(g = g, gradv = Dg, x = data_ex4, t0 = c(-1,-1))
+gmm(g = g, gradv = Dg, x = data_ex4, t0 = c(1,1), tol = 1e-117)
 
