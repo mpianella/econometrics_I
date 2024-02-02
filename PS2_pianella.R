@@ -58,7 +58,7 @@ comp_cdf_normal <- function(obs, n_obs, x_tilde){
 }
 
 #' Compute the cumulative density the share of the sample below x_tilde as estimator.
-comp_less_x_tilde <- function(obs, x_tilde){
+comp_cdf_less_x_tilde <- function(obs, x_tilde){
     value_cdf <- sum(obs < x_tilde)/length(obs)
     return(value_cdf)
 }
@@ -241,5 +241,23 @@ Dg <- function(tet, x){
     return(jacobian)
 }
 
-gmm(g = g, gradv = Dg, x = data_ex4, t0 = c(1,1), tol = 1e-117)
+estimate_gmm <- gmm(g = g, gradv = Dg, x = data_ex4, t0 = c(0.8, 2), tol = 1e-17, type = "twoStep", itermax = 10^7)
+estimate_gmm
+
+init_cond <- expand.grid(seq(from = 0, to = 1, length.out = 100), seq(from = -3, to = 3, length.out = 100))
+
+data_plot_ex_4 <- data.frame()
+for (i in 1:nrow(init_cond)){
+    t0 <- init_cond[i, ]
+    est_gmm <- gmm(g = g, gradv = Dg, x = data_ex4, t0 = t0, tol = 1e-17)
+    obj_fun <- est_gmm$objective
+    est_coeff1 <- est_gmm$coefficients[1]
+    est_coeff2 <- est_gmm$coefficients[2]
+    d <- cbind(obj_fun, est_coeff1, est_coeff2, t0)
+    data_plot_ex_4 <- rbind(data_plot_ex_4, d)
+}
+
+ggplot(data_plot_ex_4, aes(x = Var1, y = Var2, fill = log(obj_fun))) +
+    geom_tile() +
+    
 
