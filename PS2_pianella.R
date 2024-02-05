@@ -241,7 +241,8 @@ Dg <- function(tet, x){
     return(jacobian)
 }
 
-estimate_gmm <- gmm(g = g, gradv = Dg, x = data_ex4, t0 = c(0.8, 2), tol = 1e-17, type = "twoStep", itermax = 10^7)
+estimate_gmm <- gmm(g = g, gradv = Dg, x = data_ex4, t0 = c(100, 100), tol = 1e-17, 
+                    type = "twoStep", itermax = 10^7, optim = "CG")
 estimate_gmm
 
 init_cond <- expand.grid(seq(from = 0, to = 1, length.out = 100), seq(from = -3, to = 3, length.out = 100))
@@ -259,5 +260,5 @@ for (i in 1:nrow(init_cond)){
 
 ggplot(data_plot_ex_4, aes(x = Var1, y = Var2, fill = log(obj_fun))) +
     geom_tile() +
-    
+    labs(x = "Beta", y = "Gamma", title = "Heat map of the log of the objective function given initial values")
 
