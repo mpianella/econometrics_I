@@ -67,3 +67,41 @@ print(mse3)
 d_plot <- data.frame(y_hat1, y_hat2, y_hat3)
 ggpairs(d_plot)
 
+# ex.2 -----
+n_sim <- 500
+set.seed(3141)
+earnings <- rnorm(n = n_sim, mean = 19, sd = 1)
+capital_gains <- rnorm(n = n_sim, mean = 1, sd = 1)
+u <- rnorm(n = n_sim, mean = 1, sd = 0)
+e <- rnorm(n = n_sim, mean = 1, sd = 0)
+occup_status <- earnings + u 
+child_outcomes <- earnings - capital_gains + e
+income <- earnings + capital_gains
+
+# fraction of income that comes from labour marker earnings
+print(mean(earnings/income))
+
+# regress child outcomes on earnings and capital gains and show that controlling for 
+# occupational status does not affect the other coefficients 
+d1 <- data.frame(child_outcomes, earnings, capital_gains, occup_status, income)
+model1 <- lm(child_outcomes ~ earnings + capital_gains, data = d1)
+model2 <- lm(child_outcomes ~ earnings + capital_gains + occup_status, data = d1)
+beta_hat_earnings <- model1$coefficients["earnings"]
+beta_hat_capital_gains <- model1$coefficients["capital_gains"]
+beta_hat_occup_status <- model2$coefficients["occup_status"]
+print(c(beta_hat_earnings, beta_hat_capital_gains))
+print(c(beta_hat_earnings, beta_hat_capital_gains, beta_hat_occup_status)) # NA for occup_status because of multicollinearity
+
+# regress child outcomes on income and compare to previous model
+model3 <- lm(child_outcomes ~ income, data = d1)
+beta_hat_income <- model3$coefficients["income"]
+print(beta_hat_income)
+
+# correlation between occupational status and income 
+print(cor(occup_status, income))
+
+# regress child outcome on income controlling for occupational status
+model4 <- lm(child_outcomes ~ income + occup_status, data = d1)
+beta_hat_income1 <- model4$coefficients["income"]
+beta_hat_occup_status1 <- model4$coefficients["occup_status"]
+print(c(beta_hat_income1, beta_hat_occup_status1))
