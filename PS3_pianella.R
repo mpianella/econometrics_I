@@ -18,6 +18,7 @@
 
 library(ggplot2)
 library(GGally)
+library(MASS)
 
 
 # ex.1.b --------
@@ -52,7 +53,7 @@ beta_hat2_intc <- model2$coefficients["(Intercept)"]
 beta_hat2_x1 <- model2$coefficients["x_1"]
 beta_hat2_x2 <- model2$coefficients["x_2"]
 x_2_bar <- mean(x_2)
-y_hat2 <- beta_hat2_intc + beta_hat2_x1 * x_2 + beta_hat2_x2 * x_2_bar
+y_hat2 <- beta_hat2_intc + beta_hat2_x1 * x_1 + beta_hat2_x2 * x_2_bar
 mse2 <- sum((y - y_hat2)^2)/n_sim
 print(mse2)
 
@@ -66,6 +67,51 @@ print(mse3)
 
 d_plot <- data.frame(y_hat1, y_hat2, y_hat3)
 ggpairs(d_plot)
+
+# generate fitted valus for x_2 when fitting polinomial of x_1
+d3 <- data.frame(x_1, x_2)
+model_x_21 <- lm(x_2 ~ poly(x_1, 20), d3)
+x_3 <- model_x_21$fitted.values
+
+
+# estimate y and calculate mse 
+d4 <- data.frame(y, x_1, x_3)
+model4 <- lm(y ~ x_1 + x_3, d4)
+y_hat4 <- model4$fitted.values
+mse4 <- sum((y - y_hat4)^2)/n_sim 
+print(mse4)
+
+d_plot1 <- data.frame(y_hat1, y_hat2, y_hat3, y_hat4)
+ggpairs(d_plot1)
+
+# # creating a proxi for x2 using info on correlation between x1 and x2 and the info on mean and sd
+# r <- cor(x_1, x_2)
+# sigma_x2 <- sd(x_2)
+# mu_x2 <- mean(x_2)
+# print(r)
+# set.seed(31415)
+# e <- rnorm(n_sim, mean = 0, sd = 1)
+# x_3_no_mean <- r * x_1 + sqrt(1 - r^2) * e
+# z_x_3 <- (x_3 - mean(x_3))/sd(x_3) #standardize x_3
+# x_3 <- sigma_x2 * z_x_3 + mu_x2 # transform to same mean and sd as x_2
+# print(cor(x_1, x_3))
+
+
+# # generate estimates for y using x_1 and the proxi for x_2 and calculate mse
+# d3 <- data.frame(y, x_1, x_3)
+# model4 <- lm(y ~ x_1 + x_3, d3)
+# y_hat4 <- model4$fitted.values
+# mse4 <- sum((y - y_hat4)^2)/n_sim 
+# print(mse4)
+# d_plot1 <- data.frame(y_hat1, y_hat2, y_hat3, y_hat4)
+# ggpairs(d_plot1)
+
+# calculate mse when both variables are available
+d4 <- data.frame(y, x_1, x_2)
+model5 <- lm(y ~ x_1 + x_2, d4)
+y_hat5 <- model5$fitted.values
+mse5 <- sum((y - y_hat5)^2)/n_sim
+print(mse5)
 
 # ex.2 -----
 n_sim <- 500
