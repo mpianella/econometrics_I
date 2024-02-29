@@ -192,3 +192,13 @@ residual_reduced_form <- model_reduced_form$residuals
 # control function regression
 model_control <- lm(loggdp ~ risk + residual_reduced_form, data = data)
 print(model_control$coefficients[2])
+
+# add africa and latitude to the ols regression
+model_2 <- lm(loggdp ~ risk + latitude + africa, data = data)
+summary(model_2)
+
+# estimate the same model with 2SLS
+first_stage <- lm(risk ~ latitude + africa + logmort0, data = data)
+data$risk_hat_2 <- predict(first_stage)
+second_stage <- lm(risk ~ risk_hat_2 + latitude + africa, data = data)
+summary(second_stage)
