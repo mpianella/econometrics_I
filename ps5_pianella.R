@@ -184,4 +184,11 @@ lambda_hat <- model_indirect_lambda$coefficients[2]
 ils_estimator <- (1/gamma_hat) * lambda_hat
 print(ils_estimator)
 
+## estimation via the control function approach
+# estimate the residual from the reduced form equation
+model_reduced_form <- lm(risk ~ logmort0, data = data)
+residual_reduced_form <- model_reduced_form$residuals
 
+# control function regression
+model_control <- lm(loggdp ~ risk + residual_reduced_form, data = data)
+print(model_control$coefficients[2])
