@@ -1,21 +1,21 @@
 
-Table 1, point (a) (regression 12.86)
+Table 6, point (h)
 ===============================================
                         Dependent variable:    
                     ---------------------------
-                              loggdp           
+                               risk            
 -----------------------------------------------
-risk                         0.516***          
-                              (0.063)          
+level_mort0                  -0.001**          
+                             (0.0004)          
                                                
-Constant                     4.687***          
-                              (0.417)          
+Constant                     6.709***          
+                              (0.202)          
                                                
 -----------------------------------------------
 Observations                    64             
-R2                             0.524           
-Adjusted R2                    0.516           
-Residual Std. Error       0.729 (df = 62)      
-F Statistic           68.170*** (df = 1; 62)   
+R2                             0.064           
+Adjusted R2                    0.049           
+Residual Std. Error       1.432 (df = 62)      
+F Statistic            4.239** (df = 1; 62)    
 ===============================================
 Note:               *p<0.1; **p<0.05; ***p<0.01
