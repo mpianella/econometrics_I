@@ -11,6 +11,7 @@
 library(readxl)
 library(AER)
 library(dplyr)
+library(ggplot2)
 
 
 # exercise 3 ------
@@ -49,18 +50,18 @@ cat("(c) 2SLS estimate: ", two_sls_coeff, "\n",
 beta_gmm
 
 # exercise 6 -----
-# Prepare data
+# (a) prepare data
 data <- read_xlsx(file.path("xlsx", "FRED-QD.xlsx"))
 data <- data %>% 
     mutate(y = (pnfix/lag(pnfix,n = 1) - 1)) %>% # Compute growth rate
-    mutate(L1.y = lag(y, n = 1)) %>% # Compute kth lag of y
-    mutate(L2.y = lag(L1.y, n = 1)) %>% 
-    mutate(L3.y = lag(L2.y, n = 1)) %>% 
-    mutate(L4.y = lag(L3.y, n = 1)) 
-data <- na.omit(data) # Drop missing values (e.g. L1 is missing in t = 1)
+    mutate(lag_1_y = lag(y, n = 1)) %>% # Compute lags of y
+    mutate(lag_2_y = lag(lag_1_y, n = 1)) %>% 
+    mutate(lag_3_y = lag(lag_2_y, n = 1)) %>% 
+    mutate(lag_4_y = lag(lag_3_y, n = 1)) 
+data <- na.omit(data) 
 
 # Estimate model via OLS
-ols <- lm(y ~ L1.y + L2.y + L3.y + L4.y, data)
+ols <- lm(y ~ lag_1_y + lag_2_y + lag_3_y + lag_4_y, data)
 # Adj. heteroskedasticity robust variance estimator
 v.hc1 <- vcovHC(ols, type="HC1")
 se.hc1 <- sqrt(diag(v.hc1))
@@ -77,11 +78,11 @@ se.hac.0
 
 # Newey-West variance estimator with M = 5
 v.nw.5 <- NeweyWest(ols, lag = 5, prewhite = F, adjust = T)
-se.hac.5 <- sqrt(diag(v.nw.5))
+se_5 <- sqrt(diag(v.nw.5))
 # Compare results
 se.hc1
 
-se.hac.5
+cat("(c) Newey-West standard erros , with M = 5: ", se_5)
 
 # Get coefficients from OLS
 alpha <- coef(ols)
@@ -91,10 +92,24 @@ IRF <- c(0,0,0,1,rep(NA,10))
 for (j in 5:14) {
     IRF[j] <- alpha[2]*IRF[j-1] + alpha[3]*IRF[j-2] + alpha[4]*IRF[j-3] + alpha[5]*IRF[j-4]
 }
+
 IRF <- IRF[5:14]
-# Plot results
 j <- seq(1:10)
-plot(j,IRF,type='b')
+data_plot <- data.frame(IRF, j) 
+
+# Plot results
+
+ggplot(data = data_plot, aes(y = IRF, x = j)) +
+    geom_line() +
+    theme_bw() + 
+    theme(
+        # Adjusting size of axis text (tick labels)
+        axis.text.x = element_text(size = 16), # Change 12 to your preferred size for x-axis text
+        axis.text.y = element_text(size = 16), # Change 12 to your preferred size for y-axis text
+        # If you also want to adjust title sizes, you can uncomment the following:
+        axis.title.x = element_text(size = 16), # Change 14 to your preferred size for x-axis title
+        axis.title.y = element_text(size = 16) # Change 14 to your preferred size for y-axis title
+    )
 
 
 
