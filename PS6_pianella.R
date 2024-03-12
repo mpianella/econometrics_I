@@ -7,13 +7,7 @@
 ## Author: Matteo Pianella
 ##
 ## Date Created: 12th March 2024
-##
-## ---------------------------
-##
-## Notes:
-##   
-##
-## ---------------------------
+
 
 # Prepare data
 data <- read_dta("AJR2001.dta")
